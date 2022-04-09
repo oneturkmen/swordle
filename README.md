@@ -10,7 +10,7 @@ Basic analysis of 5-letter words. Inspired by [Wordle](https://www.nytimes.com/g
 
 Frequency of letters in all 5-letter words (counting duplicate letters within each word):
 
-```json
+```
 {
     'a': 2348, 'b': 715, 'c': 964, 'd': 1181,
     'e': 3009, 'f': 561, 'g': 679, 'h': 814,
@@ -24,7 +24,7 @@ Frequency of letters in all 5-letter words (counting duplicate letters within ea
 
 #### Letter frequency at each position
 
-```json
+```
 {
     0: {
         'a': 296, 'b': 432, 'c': 440, 'd': 311,
