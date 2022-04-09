@@ -85,49 +85,89 @@ I use the following logic to derive a good starter word:
 "aaa"
 "abb"
 "abc"
+"cba"
 
 # we get the corresponding dictionary of frequencies:
 {
-    "a": 3,  # 'a' occurs in 3 words, and so on.
-    "b": 2,
-    "c": 1,
+    "a": 4,  # 'a' occurs in 4 words, and so on.
+    "b": 3,
+    "c": 2,
 }
 # and sum of all frequencies is:
-3 + 2 + 1 = 6
+total = 4 + 3 + 2 = 9
 ```
 
-2. Calculate letter "coverage", which shows the percentage of letters (from alphabet of all words) covered by a word. The idea here is that we want to cover as many *unique* letters as possible for maximum diversity. The diversity helps us maximize likelihood of hitting at least one letter. We want a good starting word, not the "one-and-done" kind.
+2. Calculate *weighted* letter "coverage", which shows the weighted percentage of letters (from alphabet of all words) covered by a word. The idea here is that we want to cover as many *unique* letters as possible for maximum diversity. The diversity helps us maximize likelihood of hitting at least one letter. We want a good starting word, not the "one-and-done" kind.
 
 ```python
 "aaa"
 # ==> take unique letter 'a'
 # ==> freq['a'] / n
-# ==> 3/6 = 50%
-# Coverage: 50%
+# ==> 4/9 = 44%
+# Coverage: 44%
 
 "abb"
 # ==> take unique letters 'a', 'b'
 # ==> (freq['a'] / n) + (freq['b'] / n)
-# ==> (3/6) + (2/6) = 83%
-# Coverage: 83%
+# ==> (4/9) + (3/9) = 77%
+# Coverage: 77%
 
 "abc"
 # ==> take unique letters 'a', 'b', 'c'
 # ==> (freq['a'] / n) + ... + (freq['c'] / n)
-# ==> (3/6) + (2/6) + (1/6) = 100%
+# ==> (4/9) + (3/9) + (2/9) = 100%
+# Coverage: 100%
+
+"cba"
+# ==> take unique letters 'a', 'b', 'c'
+# ==> (freq['c'] / n) + ... + (freq['a'] / n)
+# ==> (4/9) + (3/9) + (2/9) = 100%
 # Coverage: 100%
 ```
 
 3. Sort by coverage in descending order.
 4. Drink some coffee and enjoy a chocolatine.
 
-One of the disadvantages of this approach is that if we have two equally "good" words, which one do we choose?
+Hold on for a sec. `"abc"` and `"cba"` have the same coverages (of 100%). Which one is better? *Can* one be better than another?
+
+##### Taking positions into consideration
+
+In case of having two equally "good" words, we should consider proportions of each letter *in each position* (0th to 4th indices)
+of each of the two words.
+
+1. We look at each position "vertically" (over all *k*-letter words in a very large vocabulary) and 
+calculate proportion (or "coverage") of each letter in a given position. 
+For example, with the four 3-letter words above, we will have the following positioned coverages:
 
 ```python
-# From the example above,
-"abc"  # Coverage: 100%
-"cba"  # Coverage: 100%
+# Position 1 ('aaac'):
+{
+    "a": "75%",
+    # "b": "0%"  (not shown explicitly)
+    "c": "25%"
+}
+
+# Position 2 ('abbb'):
+{
+    "a": "25%",
+    "b": "75%",
+}
+
+# Position 3 ('abca'):
+{
+    "a": "50%",
+    "b": "25%",
+    "c": "25%"
+}
 ```
 
-For example, should we choose `"abc"` over `"cba"`? Or vice versa?
-In such case, we should consider proportion of each letter *in each position* (0th to 4th indices). 
+We can also make an observation that the sum of relative frequencies at each position sums up to 100%. 
+
+2. Given that *k* is a fixed number of letters/positions (it is `3` in this case), then for each word, for each letter, get the positional coverage, e.g.:
+
+| Word        | Position 1  | Position 2  | Position 3  | Total | Total (relative = total / k) |
+| ----------- | ----------- | ----------- | ----------- | ----- | ---------------------------- |
+| "abc"       | 75%         | 75%         | 25%         | 175%  | 58.33%                       |
+| "cba"       | 25%         | 75%         | 50%         | 150%  | 50%                          |
+
+Voila. We found the best word of the two: `"abc"`. Congratulations, `"abc"`! :tada:
