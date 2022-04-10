@@ -1,3 +1,4 @@
+from functools import cmp_to_key
 from pprint import pprint
 
 def load_words(filename):
@@ -5,62 +6,95 @@ def load_words(filename):
         return f.read().splitlines()
 
 
-def print_unordered_letter_frequency(words, alphabet):
-    frequency = {l: 0 for l in alphabet}
-
-    for word in words:
-        for letter in word:
-            frequency[letter] += 1
-
-    print("\n-- Unordered frequencies!! --\n")
-    pprint(frequency)
-
-    # Ordered by value (highest frequency at the top, and vice versa).
-    ordered_frequency = {
-        k: v for k, v in sorted(
-            frequency.items(), key=lambda item: -item[1]
-        )
+def get_positional_frequency(words, alphabet, k=5):
+    positional_frequency = {
+        position: {
+            letter: 0 for letter in alphabet
+        } for position in range(k)
     }
-    print("\n-- Ordered frequencies!! --\n")
-    pprint(ordered_frequency, sort_dicts=False)
-
-
-def print_positioned_letter_frequency(words, alphabet):
-    posfrequency = {p: {l: 0 for l in alphabet} for p in range(5)}
     
     for word in words:
-        assert len(word) == 5, "There is a word that does not have 5 letters!"
-        for pos in range(5):
-            letter = word[pos]
-            posfrequency[pos][letter] += 1
+        assert len(word) == k, f"There is a word that does not have {k} letters!"
+        for position in range(k):
+            letter = word[position]
+            positional_frequency[position][letter] += 1
+    
+    positional_total_frequency = {
+        position: sum(positional_frequency[position].values()) for position in range(k)
+    }
 
-    print("\n-- Unordered positioned frequencies!! --\n")
-    pprint(posfrequency)
+    relative_positional_frequency = {
+        position: {
+            letter: (positional_frequency[position][letter] / positional_total_frequency[position]) for letter in alphabet
+        } for position in range(k)
+    }
 
-    # Ordered by value (highest frequency at the top, and vice versa).
-    for pos in range(5):
-        posfrequency[pos] = {
-           k: v for k, v in sorted(
-                posfrequency[pos].items(), key=lambda item: -item[1]
-            )
-        }
-    print("\n-- Ordered positioned frequencies!! --\n")
-    pprint(posfrequency, sort_dicts=False)
+    return relative_positional_frequency
 
+
+def get_positional_coverage(relative_positional_frequency, words, k=5):
+    positional_coverage = {}
+
+    for word in words:
+        positional_coverage[word] = 0
+
+        for position, letter in enumerate(word):
+            positional_coverage[word] += relative_positional_frequency[position][letter]
+
+        # Get relative coverage.
+        positional_coverage[word] /= k
+    
+    def compare_word_coverage(a, b):
+        """ If two words have the same coverage,
+        then prioritize the one that has less duplicate
+        letters.  
+        """
+        word_a, freq_a = a
+        word_b, freq_b = b
+        if abs(freq_a - freq_b) <= 0.00001:
+            return len(set(word_a)) - len(set(word_b))
+        else:
+            return freq_a - freq_b
+
+    positional_coverage = dict(sorted(
+        positional_coverage.items(),
+        key=cmp_to_key(compare_word_coverage),
+        reverse=True
+    ))
+
+    # Find only words where all K letters are distinct,
+    # since that maximizes the probability of "hitting"
+    # a correct letter (albeit, not necessarily in
+    # the right position).
+    positional_coverage = dict(
+        filter(
+            lambda coverage: len(set(coverage[0])) == k,
+            positional_coverage.items()
+        )
+    )
+
+    return positional_coverage
 
 
 def main():
     WORDS_PATH = 'words.txt'
-    alphabet = [
+    ALPHABET = [
         'a','b','c','d','e','f','g',
         'h','i','j','k','l','m','n',
         'o','p','q','r','s','t','u',
         'v','w','x','y','z'
     ]
 
-    words = load_words(WORDS_PATH)
-    print_unordered_letter_frequency(words, alphabet)
-    print_positioned_letter_frequency(words, alphabet)
+    words = load_words(filename=WORDS_PATH)
+    # alphabet = "abc"
+    # words = ["aaa", "abb", "abc", "cba"]
+
+    # 1. Find relative positional frequency.
+    relative_positional_frequency = get_positional_frequency(words, alphabet=ALPHABET)
+
+    # 2. Get the positional "coverage" of each word (sorted in descending order).
+    positional_coverage = get_positional_coverage(relative_positional_frequency, words)
+    pprint(positional_coverage, sort_dicts=False)
 
 if __name__ == '__main__':
     main()

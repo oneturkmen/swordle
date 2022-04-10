@@ -171,3 +171,28 @@ We can also make an observation that the sum of relative frequencies at each pos
 | "cba"       | 25%         | 75%         | 50%         | 150%  | 50%                          |
 
 Voila. We found the best word of the two: `"abc"`. Congratulations, `"abc"`! :tada:
+
+Actually, not quite. If you are diligent enough, you would see that `"abb"` has total (relative) coverage of 58.33%, i.e., the same as `"abc"`.
+The problem stems from the repeating characters.
+
+| Word        | Position 1  | Position 2  | Position 3  | Total | Total (relative = total / k) |
+| ----------- | ----------- | ----------- | ----------- | ----- | ---------------------------- |
+| "abc"       | 75%         | 75%         | 25%         | 175%  | 58.33%                       |
+| "abb"       | 75%         | 75%         | 25%         | 175%  | 58.33%                       |
+
+Why? Because, as letters start to repeat, the probability of hitting an existing letter from the target word becomes lower.
+For example, `"abb"` has only two distinct letters, namely `"a"` and `"b"`, whereas `"abc"` has three. So, statistically speaking, `"abc"` has a higher
+probability of hitting some or all letters correct.
+
+You may wonder why then the two words `"abb"` and `"abc"` have the same relative coverage. The answer is that we should *not* be counting
+positional coverage of a letter if we already saw it before. The following example shows the correct calculations:
+
+| Word        | Position 1  | Position 2  | Position 3  | Total | Total (relative = total / k) |
+| ----------- | ----------- | ----------- | ----------- | ----- | ---------------------------- |
+| "abc"       | 75%         | 75%         | 25%         | 175%  | 58.33%                       |
+| "abb"       | 75%         | 75%         | (skip)      | 150%  | 50%                          |
+
+Notice how we skip adding the proportion of the letter `"b"` from position 3 because we already processed it in position 2.
+This begs the question of what position should we choose if a letter occurs multiple times (i.e., in different positions). 
+We just have to be *greedy*: for a given letter, we have to choose a position (and one only) that has the maximal proportion.
+By choosing the maximal proportion, we maximize the end value of the total relative coverage.
