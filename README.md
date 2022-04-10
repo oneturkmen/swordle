@@ -195,4 +195,28 @@ positional coverage of a letter if we already saw it before. The following examp
 Notice how we skip adding the proportion of the letter `"b"` from position 3 because we already processed it in position 2.
 This begs the question of what position should we choose if a letter occurs multiple times (i.e., in different positions). 
 We just have to be *greedy*: for a given letter, we have to choose a position (and one only) that has the maximal proportion.
-By choosing the maximal proportion, we maximize the end value of the total relative coverage.
+By choosing the maximal proportion, we maximize the end value of the total (relative) coverage.
+
+Alternatively, we can just ignore the words with repeating characters before returning a set of good starter words
+(ordered by total relative coverage). Note that we still use those words to calculate (relative) positional proportion (coverage)
+of each letter.
+
+Here is a list of top-10 starter words,
+along with their total (relative) coverage (based on the dataset of ~5K 5-letter words):
+
+```python
+{
+    'cares': 0.16803890915407332,
+    'bares': 0.1677609866249783,
+    'cores': 0.16737884314747262,
+    'bores': 0.1671009206183776,
+    'pares': 0.16616293208268193,
+    'tares': 0.16581552892131318,
+    'canes': 0.1657807886051763,
+    'pores': 0.16550286607608128,
+    'banes': 0.16550286607608128,
+    'cones': 0.16512072259857566,
+}
+```
+
+Aaand, we are done. Or so I hope.
